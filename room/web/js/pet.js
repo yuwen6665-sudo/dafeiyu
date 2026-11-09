@@ -273,13 +273,16 @@ menu.innerHTML = `
 document.body.appendChild(menu);
 const submenu = menu.querySelector("#submenu");
 const submenuSize = menu.querySelector("#submenuSize");
+// 子菜单独立成浮层（跟菜单并排放不下，改成窗口内居中）
+document.body.appendChild(submenu);
+document.body.appendChild(submenuSize);
 const SIZES = [80, 100, 125];
 
 for (const key of Object.keys(ANIM)) {
   const el = document.createElement("div");
   el.className = "item sub";
   el.textContent = ANIM_NAMES[key] || key;
-  el.onclick = () => { setAnim(key); hideMenu(); setTimeout(() => { if (!busy) setAnim(moodAnim()); }, 2600); };
+  el.onclick = () => { setAnim(key); hideMenu(); submenu.classList.remove("on"); setTimeout(() => { if (!busy) setAnim(moodAnim()); }, 2600); };
   submenu.appendChild(el);
 }
 for (const s of SIZES) {
@@ -350,7 +353,13 @@ window.addEventListener("contextmenu", (e) => {
 });
 
 window.addEventListener("mousedown", (e) => {
-  if (!menu.contains(e.target)) hideMenu();
+  const inMenu = menu.contains(e.target);
+  const inSub = submenu.contains(e.target) || submenuSize.contains(e.target);
+  if (!inMenu && !inSub) {
+    hideMenu();
+    submenu.classList.remove("on");
+    submenuSize.classList.remove("on");
+  }
 });
 
 menu.addEventListener("click", (e) => {
@@ -359,13 +368,14 @@ menu.addEventListener("click", (e) => {
     const s = Number(sizeBtn.dataset.size);
     if (bridge && bridge.setScale) bridge.setScale(s);
     hideMenu();
+    submenuSize.classList.remove("on");
     return;
   }
   const hit = e.target.closest("[data-act]");
   const act = hit ? hit.dataset.act : null;
   if (!act) return;
-  if (act === "anim") { submenu.classList.toggle("on"); submenuSize.classList.remove("on"); placePanel(submenu); return; }
-  if (act === "size") { submenuSize.classList.toggle("on"); submenu.classList.remove("on"); placePanel(submenuSize); return; }
+  if (act === "anim") { hideMenu(); submenuSize.classList.remove("on"); submenu.classList.add("on"); return; }
+  if (act === "size") { hideMenu(); submenu.classList.remove("on"); submenuSize.classList.add("on"); return; }
   if (act === "say") { say(LINES[Math.floor(Math.random() * LINES.length)]); hideMenu(); }
   if (act === "voice") { bridge && bridge.voice && bridge.voice(); hideMenu(); }
   if (act === "room") { bridge && bridge.room && bridge.room(); hideMenu(); }

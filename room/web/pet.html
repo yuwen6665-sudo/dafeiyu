@@ -48,7 +48,8 @@
   #menu .item:hover { background: #f0e6d6; }
   #menu .sep { height: 1px; margin: 5px 6px; background: rgba(80, 60, 40, .15); }
   #submenu {
-    position: absolute; left: 100%; top: 0; margin-left: 4px;
+    position: fixed; left: 50%; top: 50%; transform: translate(-50%, -50%);
+    z-index: 60;
     min-width: 208px; padding: 6px;
     background: rgba(255, 252, 246, .98); border-radius: 10px;
     box-shadow: 0 10px 30px rgba(20, 30, 50, .28);
@@ -58,7 +59,8 @@
   }
   #submenu.on { display: grid; }
   #submenuSize {
-    position: absolute; left: 100%; top: 0; margin-left: 4px;
+    position: fixed; left: 50%; top: 50%; transform: translate(-50%, -50%);
+    z-index: 60;
     min-width: 100px; padding: 6px;
     background: rgba(255, 252, 246, .98); border-radius: 10px;
     box-shadow: 0 10px 30px rgba(20, 30, 50, .28);
