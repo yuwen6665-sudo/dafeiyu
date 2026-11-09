@@ -10,6 +10,9 @@
 *.err
 voice-sidecar-state.json
 pet-bounds.json
+pet-prefs.json
+udata/
+fullscreen.exe
 autostart.log
 host.log
 overlay.log

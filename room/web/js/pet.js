@@ -1,5 +1,7 @@
-/* 于笙桌宠：Q 版小肥鱼，在桌面上到处跑、做小动作、说话。
- * 交互：拖拽、右键菜单（换动作/说话/语音/打开房间/退出）、鼠标靠近走过来、没事找你说句话。
+/* 于笙桌宠 v2（小窗口版）
+ *
+ * 窗口只有 360×380，她一直在窗口中间。所谓"到处跑"= 让宿主移动整个窗口。
+ * 好处：点击 / 拖拽 / 右键全部是正常鼠标事件，不再依赖"动态穿透"。
  */
 const ANIM = {
   idle: "待机呼吸休闲.webm",
@@ -42,15 +44,17 @@ const video = document.getElementById("anim");
 const bubble = document.getElementById("bubble");
 const canvas = document.getElementById("canvas");
 const ctx = canvas.getContext("2d", { alpha: true });
+const bridge = window.yusheng || null;
 
-let x = 50;
-let facing = 1;
+let cx = 0;
+let cy = 0;
 let busy = false;
 let dragging = false;
-let mouseX = -1;
 let talking = 0;
 let buf = "";
 let audio = null;
+
+function sendMove() { if (bridge && bridge.move) bridge.move({ cx, cy }); }
 
 function setAnim(name) {
   const file = ANIM[name] || ANIM.idle;
@@ -59,7 +63,7 @@ function setAnim(name) {
   video.play().catch(() => {});
 }
 
-/* 透明窗口里 <video> 会变白底，逐帧画到 canvas 保留 alpha */
+/* 透明窗口里 <video> 会失去 alpha，逐帧画到 canvas */
 function drawFrame() {
   if (video.readyState >= 2 && video.videoWidth) {
     if (canvas.width !== video.videoWidth) {
@@ -74,37 +78,47 @@ function drawFrame() {
 requestAnimationFrame(drawFrame);
 
 function resizePet() {
-  const h = Math.max(120, Math.min(window.innerHeight * 0.16, 220));
+  // 跟着窗口一起缩放：100% 时窗口高 380 → 本体 200
+  const h = Math.round(window.innerHeight * 0.526);
   petEl.style.height = h + "px";
 }
 
-function place() {
-  petEl.style.left = x + "%";
-  petEl.classList.toggle("flip", facing < 0);
+function face(dir) {
+  petEl.classList.toggle("flip", dir < 0);
 }
 
 function sleep(ms) { return new Promise((r) => setTimeout(r, ms)); }
 
-async function walkTo(targetX, fast = false) {
+async function walkTo(targetCx, targetCy, fast) {
   if (busy || dragging) return;
   busy = true;
-  facing = targetX > x ? 1 : -1;
-  place();
+  face(targetCx > cx ? 1 : -1);
   setAnim(fast ? "run" : "walk");
-  const speed = fast ? 0.55 : 0.3;
-  while (!dragging && Math.abs(targetX - x) > 0.8) {
-    await sleep(60);
-    const d = Math.sign(targetX - x) * speed * 0.6;
-    x = Math.abs(targetX - x) < Math.abs(d) ? targetX : x + d;
-    place();
+  const speed = fast ? 9 : 4;
+  while (!dragging && (Math.abs(targetCx - cx) > 2 || Math.abs(targetCy - cy) > 2)) {
+    await sleep(16);
+    const dx = Math.sign(targetCx - cx) * speed;
+    const dy = Math.sign(targetCy - cy) * speed * 0.9;
+    cx = Math.abs(targetCx - cx) < Math.abs(dx) ? targetCx : cx + dx;
+    cy = Math.abs(targetCy - cy) < Math.abs(dy) ? targetCy : cy + dy;
+    sendMove();
   }
   setAnim("idle");
-  await sleep(300);
+  await sleep(250);
   busy = false;
 }
 
 async function wander() {
-  await walkTo(8 + Math.random() * 84, Math.random() < 0.35);
+  const hw = window.innerWidth / 2;
+  const hh = window.innerHeight / 2;
+  const maxCx = screen.width - hw - 12, minCx = hw + 12;
+  const maxCy = screen.height - hh - 60, minCy = hh + 40;
+  if (maxCx <= minCx || maxCy <= minCy) return;
+  // 大部分时间在地面附近，偶尔飞到上面去
+  const ty = Math.random() < 0.65
+    ? maxCy - Math.random() * 120
+    : minCy + Math.random() * (maxCy - minCy);
+  await walkTo(minCx + Math.random() * (maxCx - minCx), ty, Math.random() < 0.35);
 }
 
 async function act() {
@@ -112,36 +126,26 @@ async function act() {
   busy = true;
   const a = ACTIONS[Math.floor(Math.random() * ACTIONS.length)];
   setAnim(a);
-  await sleep(2200 + Math.random() * 2600);
+  await sleep(2200 + Math.random() * 2400);
   setAnim("idle");
   busy = false;
 }
 
+let loopCount = 0;
 async function loop() {
   for (;;) {
-    await sleep(1800 + Math.random() * 2600);
-    if (window.__freeze) continue;
+    loopCount++;
+    await sleep(2000 + Math.random() * 2600);
     if (busy || dragging || talking > 0) continue;
-
-    // 鼠标靠近就自己走过去（太近就不动，免得抖）
-    if (mouseX >= 0) {
-      const mx = (mouseX / window.innerWidth) * 100;
-      const dist = Math.abs(mx - x);
-      if (dist > 6 && dist < 55 && Math.random() < 0.55) {
-        await walkTo(mx < 6 ? 6 : mx > 94 ? 94 : mx, dist > 30);
-        continue;
-      }
-    }
-
     const r = Math.random();
-    if (r < 0.4) await wander();
-    else if (r < 0.75) await act();
+    if (r < 0.45) await wander();
+    else if (r < 0.78) await act();
     else setAnim(Math.random() < 0.5 ? "idle2" : "idle");
   }
 }
 
 /* ---------- 说话 ---------- */
-function showBubble(text) { bubble.textContent = text; bubble.classList.add("on"); }
+function showBubble(t) { bubble.textContent = t; bubble.classList.add("on"); }
 function hideBubble() { bubble.classList.remove("on"); }
 
 async function speak(text) {
@@ -168,10 +172,9 @@ function say(text) {
   speak(text);
   setAnim("wave");
   setTimeout(() => { if (!busy) setAnim("idle"); }, 1400);
-  setTimeout(hideBubble, 3200);
+  setTimeout(hideBubble, 3400);
 }
 
-/* ---------- 事件流 ---------- */
 function connect() {
   const es = new EventSource("/api/events");
   es.onmessage = (m) => {
@@ -181,10 +184,7 @@ function connect() {
       talking++;
       buf += e.text;
       showBubble(buf);
-      if (/[。！？!?\n]$/.test(buf) || buf.length >= 28) {
-        const s = buf; buf = "";
-        speak(s);
-      }
+      if (/[。！？!?\n]$/.test(buf) || buf.length >= 28) { const s = buf; buf = ""; speak(s); }
       return;
     }
     if (e.type === "speech" && e.op === "begin") { talking = 0; buf = ""; hideBubble(); return; }
@@ -204,31 +204,49 @@ function connect() {
   };
 }
 
-/* ---------- 鼠标 ---------- */
-window.addEventListener("mousemove", (e) => { mouseX = e.clientX; });
+/* ---------- 鼠标：只有她身上才接管 ---------- */
+let hovering = false;
+function setHover(v) {
+  if (v === hovering) return;
+  hovering = v;
+  if (bridge && bridge.hover) bridge.hover(v);
+}
+window.addEventListener("mousemove", (e) => {
+  const r = petEl.getBoundingClientRect();
+  const inside = e.clientX >= r.left - 8 && e.clientX <= r.right + 8 &&
+                 e.clientY >= r.top - 8 && e.clientY <= r.bottom + 8;
+  setHover(inside);
+});
+window.addEventListener("mouseleave", () => setHover(false));
 
-/* ---------- 拖拽 ---------- */
-let dragOffX = 0;
+/* ---------- 拖拽（直接移动窗口） ---------- */
+let dragOffX = 0, dragOffY = 0;
 petEl.addEventListener("pointerdown", (e) => {
   if (e.button !== 0) return;
   dragging = true;
-  petEl.setPointerCapture(e.pointerId);
-  const r = petEl.getBoundingClientRect();
-  dragOffX = e.clientX - (r.left + r.width / 2);
+  try { petEl.setPointerCapture(e.pointerId); } catch (err) {}
+  // 抓取偏移：窗口中心相对鼠标的位置，拖动时保持不变（不会跳到鼠标中心）
+  const winCx = (window.screenX || 0) + window.innerWidth / 2;
+  const winCy = (window.screenY || 0) + window.innerHeight / 2;
+  dragOffX = winCx - e.screenX;
+  dragOffY = winCy - e.screenY;
+  cx = winCx;
+  cy = winCy;
   setAnim("float");
   e.preventDefault();
 });
 window.addEventListener("pointermove", (e) => {
   if (!dragging) return;
-  const cx = e.clientX - dragOffX;
-  x = Math.max(2, Math.min(98, (cx / window.innerWidth) * 100));
-  place();
+  cx = e.screenX + dragOffX;
+  cy = e.screenY + dragOffY;
+  sendMove();
 });
 window.addEventListener("pointerup", () => {
   if (!dragging) return;
   dragging = false;
   setAnim("idle");
 });
+
 petEl.addEventListener("click", () => {
   if (dragging) return;
   setAnim("wave");
@@ -248,46 +266,50 @@ menu.innerHTML = `
   <div id="submenu"></div>
 `;
 document.body.appendChild(menu);
-
 const submenu = menu.querySelector("#submenu");
 for (const key of Object.keys(ANIM)) {
   const el = document.createElement("div");
   el.className = "item sub";
   el.textContent = ANIM_NAMES[key] || key;
-  el.onclick = () => {
-    setAnim(key);
-    hideMenu();
-    setTimeout(() => { if (!busy) setAnim("idle"); }, 2600);
-  };
+  el.onclick = () => { setAnim(key); hideMenu(); setTimeout(() => { if (!busy) setAnim("idle"); }, 2600); };
   submenu.appendChild(el);
 }
 
-function hideMenu() {
-  menu.classList.remove("on");
-  submenu.classList.remove("on");
-}
+function hideMenu() { menu.classList.remove("on"); submenu.classList.remove("on"); }
 
 window.addEventListener("contextmenu", (e) => {
   e.preventDefault();
-  menu.style.left = Math.min(e.clientX, window.innerWidth - 190) + "px";
-  menu.style.top = Math.min(e.clientY, window.innerHeight - 240) + "px";
   menu.classList.add("on");
+  // 先显示再量尺寸，贴边时自动翻到上方/左侧，避免被屏幕裁掉
+  const mw = menu.offsetWidth || 160;
+  const mh = menu.offsetHeight || 200;
+  let left = e.clientX;
+  let top = e.clientY;
+  if (left + mw > window.innerWidth - 4) left = Math.max(4, window.innerWidth - mw - 4);
+  if (top + mh > window.innerHeight - 4) top = Math.max(4, e.clientY - mh - 8);
+  menu.style.left = left + "px";
+  menu.style.top = top + "px";
 });
 window.addEventListener("mousedown", (e) => {
   if (!menu.contains(e.target)) { hideMenu(); submenu.classList.remove("on"); }
 });
-
 menu.addEventListener("click", (e) => {
   const act = e.target.dataset.act;
   if (!act) return;
-  if (act === "anim") { submenu.classList.toggle("on"); return; }
+  if (act === "anim") {
+    submenu.classList.toggle("on");
+    // 右边放不下就翻到左边
+    const mr = menu.getBoundingClientRect();
+    const sw = submenu.offsetWidth || 110;
+    submenu.classList.toggle("left", mr.right + sw > window.innerWidth - 4);
+    return;
+  }
   if (act === "say") { say(LINES[Math.floor(Math.random() * LINES.length)]); hideMenu(); }
-  if (act === "voice") { window.yusheng && window.yusheng.voice && window.yusheng.voice(); hideMenu(); }
-  if (act === "room") { window.yusheng && window.yusheng.room && window.yusheng.room(); hideMenu(); }
-  if (act === "quit") { window.yusheng && window.yusheng.quit(); }
+  if (act === "voice") { bridge && bridge.voice && bridge.voice(); hideMenu(); }
+  if (act === "room") { bridge && bridge.room && bridge.room(); hideMenu(); }
+  if (act === "quit") { bridge && bridge.quit && bridge.quit(); }
 });
 
-/* ---------- 没事找你说句话 ---------- */
 async function idleChat() {
   for (;;) {
     await sleep((8 + Math.random() * 7) * 60 * 1000);
@@ -296,16 +318,71 @@ async function idleChat() {
   }
 }
 
-// 把她的位置报给宿主，宿主据此决定这块区域是否接收鼠标
-setInterval(() => {
-  if (!window.yusheng || !window.yusheng.bounds) return;
-  const r = petEl.getBoundingClientRect();
-  window.yusheng.bounds({ l: r.left, t: r.top, r: r.right, b: r.bottom, dpr: window.devicePixelRatio || 1 });
-}, 120);
+/* ---------- 调试 ---------- */
+window.__errs = [];
+window.addEventListener("error", (e) => window.__errs.push(String(e.message)));
+window.__walk = (tx, ty, fast) => walkTo(tx, ty, fast);
+window.__petDebug = () => ({ cx: Math.round(cx), cy: Math.round(cy), busy, dragging, talking, loopCount, errs: window.__errs.slice(-3) });
+window.addEventListener("unhandledrejection", (e) => window.__errs.push("REJ: " + (e.reason && e.reason.message || e.reason)));
 
+function bindAnim() {
+  if (bridge && bridge.onAnim) {
+    bridge.onAnim((name) => { if (ANIM[name]) setAnim(name); });
+  }
+}
+
+
+/* ---------- 心情（来自 feiyu-mood，只读） ---------- */
+let moodState = null;
+let lastMoodSay = 0;
+
+function moodAnim() {
+  if (!moodState) return "idle";
+  const m = moodState.mood;
+  if (m >= 80) return "happy";
+  if (m >= 60) return "idle";
+  if (m >= 45) return "idle2";
+  if (m >= 30) return "yawn";
+  return "sleep";
+}
+
+function moodLines() {
+  const m = moodState ? moodState.mood : 70;
+  if (m >= 80) return ["今天心情好～", "嘿嘿 一切都挺好", "感觉能一口气跑完整个桌面"];
+  if (m >= 60) return ["我在这儿哦", "陪着你呢", "有点想跟你说说话"];
+  if (m >= 45) return ["嗯……我安静待一会儿", "有点发呆"];
+  if (m >= 30) return ["有点提不起劲……", "让我缓缓"];
+  return ["今天不太想说话", "想缩成一团待着"];
+}
+
+function applyMood(m) {
+  moodState = m;
+  if (busy || dragging) return;
+  setAnim(moodAnim());
+  // 心情变化明显时，偶尔主动说一句（10 分钟最多一次）
+  const now = Date.now();
+  if (now - lastMoodSay > 10 * 60 * 1000 && Math.random() < 0.5) {
+    lastMoodSay = now;
+    const lines = moodLines();
+    say(lines[Math.floor(Math.random() * lines.length)]);
+  }
+}
+
+function bindMood() {
+  if (bridge && bridge.onMood) bridge.onMood((m) => applyMood(m));
+}
+/* ---------- 启动 ---------- */
+cx = (window.screenX || 0) + window.innerWidth / 2;
+cy = (window.screenY || 0) + window.innerHeight / 2;
 resizePet();
-place();
-window.addEventListener("resize", () => { resizePet(); place(); });
-loop();
+sendMove();
+window.addEventListener("resize", () => {
+  resizePet();
+  // 跟宿主同步当前位置（不要把旧坐标发回去，否则会被拽回原位）
+  cx = (window.screenX || 0) + window.innerWidth / 2;
+  cy = (window.screenY || 0) + window.innerHeight / 2;
+});
 connect();
 idleChat();
+bindAnim();
+bindMood();

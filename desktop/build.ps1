@@ -25,8 +25,8 @@ if (-not (Test-Path (Join-Path $electron 'electron.exe'))) {
 
 New-Item -ItemType Directory -Force -Path $appDir | Out-Null
 
-Write-Host '[1/3] 编译 attach.exe / bottom.exe / watcher.exe'
-foreach ($name in @('attach', 'bottom', 'watcher')) {
+Write-Host '[1/3] 编译 attach.exe / bottom.exe / watcher.exe / fullscreen.exe'
+foreach ($name in @('attach', 'bottom', 'watcher', 'fullscreen')) {
     & $csc /nologo /target:exe /platform:x64 /optimize+ `
         "/out:$appDir\$name.exe" (Join-Path $root "src\$name.cs")
     if ($LASTEXITCODE -ne 0) { throw "编译 $name.cs 失败" }

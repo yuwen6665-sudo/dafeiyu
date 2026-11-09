@@ -29,6 +29,16 @@ xiaokeai / DesktopGirls）做法一致。
 `pet-bounds.json` 由页面每 120ms 上报（`window.yusheng.bounds()`），内容是她在页面里的
 CSS 坐标 + dpr；watcher 用 `GetCursorPos` 对比，鼠标落在她身上就去掉 `WS_EX_TRANSPARENT`。
 
+## 快捷键
+
+| 快捷键 | 作用 |
+|---|---|
+| `Ctrl + Alt + H` | 隐藏 / 显示（手动，与全屏自动隐藏互相独立） |
+| `Ctrl + Alt + 1 / 2 / 3` | 缩放 80% / 100% / 125% |
+| `Ctrl + Alt + Y` | 临时切换置顶 |
+
+位置、缩放、隐藏状态保存在 `pet-prefs.json`，重启自动恢复。
+
 ## 构建
 
 ```powershell

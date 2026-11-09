@@ -8,7 +8,7 @@
   html, body { margin: 0; height: 100%; background: transparent; overflow: hidden;
     font-family: "PingFang SC", "Microsoft YaHei", system-ui, sans-serif; }
   #pet {
-    position: fixed; left: 50%; bottom: 8%;
+    position: fixed; left: 50%; bottom: 6px;
     transform: translateX(-50%);
     will-change: left, transform;
     cursor: grab;
@@ -18,12 +18,12 @@
   #pet canvas { display: block; height: 100%; width: auto; background: transparent; }
   #pet.flip { transform: translateX(-50%) scaleX(-1); }
   #bubble {
-    position: fixed; left: 50%; bottom: 34%;
+    position: fixed; left: 50%; top: 8px;
     transform: translateX(-50%);
-    max-width: min(420px, 60vw);
+    max-width: 320px;
     padding: 10px 14px;
     background: rgba(255, 252, 246, .96);
-    color: #2f3a45; font-size: 15px; line-height: 1.5;
+    color: #2f3a45; font-size: 13px; line-height: 1.45;
     border-radius: 14px;
     box-shadow: 0 8px 24px rgba(20, 30, 50, .25);
     opacity: 0; transition: opacity .18s ease;
@@ -55,6 +55,7 @@
     display: none;
   }
   #submenu.on { display: block; }
+  #submenu.left { left: auto; right: 100%; margin-left: 0; margin-right: 4px; }
 </style>
 </head>
 <body>
