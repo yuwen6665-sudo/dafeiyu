@@ -1,0 +1,70 @@
+{
+  "_comment": "qq-bridge 配置样例：请复制为 config.json 后填入你自己的值。不要提交真实 token。",
+
+  "snowluma": {
+    "baseUrl": "http://127.0.0.1:3000",
+    "wsUrl": "ws://127.0.0.1:3001",
+    "accessToken": "YOUR_ONEBOT_ACCESS_TOKEN"
+  },
+
+  "dsh": {
+    "baseUrl": "http://127.0.0.1:61909",
+    "provider": "deepseek-account",
+    "model": "deepseek-flash",
+    "reasoningEffort": "high",
+    "authToken": "",
+    "authHeader": "authorization",
+    "authPrefix": "Bearer",
+    "allowRemote": false
+  },
+
+  "allow": {
+    "private": ["YOUR_QQ_ID"],
+    "groups": ["YOUR_GROUP_ID"]
+  },
+
+  "role": {
+    "name": "于笙",
+    "maxInjectChars": 10000
+  },
+
+  "consoleToken": "CHANGE_ME_RANDOM_STRING",
+
+  "agent": {
+    "preset": "qq-chat-v2"
+  },
+
+  "send": {
+    "maxPerMinute": 10,
+    "maxPerHour": 80,
+    "maxChars": 600
+  },
+
+  "socialV2": {
+    "proactive": {
+      "enabled": true,
+      "minIntervalMs": 300000,
+      "maxIntervalMs": 600000,
+      "idleMs": 180000,
+      "probability": 0.9,
+      "quietStartHour": 23,
+      "quietEndHour": 8,
+      "privateEnabled": false
+    },
+    "wake": {
+      "probability": 0.8,
+      "batchWindowMs": 3000
+    }
+  },
+
+  "sticker": {
+    "promptMax": 12,
+    "collectPerMinute": 3,
+    "collectPerHour": 20
+  },
+
+  "voice": {
+    "enabled": false,
+    "_comment": "qq-bridge 自身只播放 audio/ 里预置的音频；实时 TTS 用 qq/voice-sidecar.ps1"
+  }
+}

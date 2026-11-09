@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>于笙的房间</title>
+<link rel="stylesheet" href="css/room.css">
+</head>
+<body>
+<div id="stage">
+  <div class="wall"></div>
+  <div class="floor"></div>
+  <div class="baseboard"></div>
+
+  <div class="window"><div class="sun"></div><div class="bars"></div></div>
+  <div class="curtain left"></div>
+  <div class="curtain right"></div>
+
+  <div class="frame a"><div class="pic"></div></div>
+  <div class="frame b"><div class="pic"></div></div>
+
+  <div class="bed">
+    <div class="frame"></div>
+    <div class="mattress"></div>
+    <div class="blanket"></div>
+    <div class="pillow"></div>
+  </div>
+
+  <div class="desk">
+    <div class="leg l"></div>
+    <div class="leg r"></div>
+    <div class="top"></div>
+    <div class="laptop"></div>
+  </div>
+  <div class="lamp"><div class="glow"></div><div class="stem"></div><div class="shade"></div></div>
+
+  <div class="rug"></div>
+  <div class="plant"><div class="leaf"></div><div class="leaf two"></div><div class="pot"></div></div>
+
+  <div id="char"><div id="char-body"></div></div>
+  <div id="subtitle"></div>
+</div>
+
+<form id="console" autocomplete="off">
+  <input id="input" placeholder="跟于笙说点什么…（Enter 发送）" maxlength="2000">
+  <button type="submit">说</button>
+</form>
+
+<script src="js/rig.js"></script>
+<script src="js/avatar.js"></script>
+<script src="js/speech.js"></script>
+<script src="js/room.js"></script>
+</body>
+</html>

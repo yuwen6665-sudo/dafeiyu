@@ -1,0 +1,199 @@
+  /* 房间视图：暖色日系小卧室，纯 CSS 画出来，方便以后换成实景图 */
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; overflow: hidden; background: #1a1512; }
+  body { font-family: "PingFang SC", "Microsoft YaHei", system-ui, sans-serif; }
+
+  #stage { position: fixed; inset: 0; overflow: hidden; }
+  #stage.desk { cursor: none; }
+
+  /* ---------- 墙 ---------- */
+  .wall {
+    position: absolute; inset: 0;
+    background:
+      radial-gradient(120% 80% at 78% 18%, rgba(255, 226, 170, .55) 0%, rgba(255, 226, 170, 0) 55%),
+      linear-gradient(180deg, #efdcc3 0%, #e7cfb2 62%, #dcc2a2 100%);
+  }
+  .wall::after {           /* 墙纸细纹 */
+    content: ""; position: absolute; inset: 0;
+    background-image: repeating-linear-gradient(90deg, rgba(150, 110, 70, .045) 0 2px, transparent 2px 26px);
+  }
+
+  /* ---------- 地板 ---------- */
+  .floor {
+    position: absolute; left: 0; right: 0; bottom: 0; height: 32%;
+    background: linear-gradient(180deg, #c9a179 0%, #b98d63 55%, #a87c54 100%);
+    box-shadow: inset 0 18px 40px rgba(90, 60, 30, .28);
+  }
+  .floor::before {         /* 木条 */
+    content: ""; position: absolute; inset: 0;
+    background-image: repeating-linear-gradient(180deg, rgba(255,255,255,.10) 0 1px, transparent 1px 42px),
+                      repeating-linear-gradient(90deg, rgba(60, 35, 15, .18) 0 1px, transparent 1px 160px);
+    opacity: .7;
+  }
+  .baseboard {
+    position: absolute; left: 0; right: 0; bottom: 32%; height: 1.4%;
+    background: linear-gradient(180deg, #f4e7d6, #e2cdb2);
+    box-shadow: 0 2px 6px rgba(80, 50, 20, .25);
+  }
+
+  /* ---------- 窗 ---------- */
+  .window {
+    position: absolute; right: 8%; top: 10%; width: 26%; height: 40%;
+    border-radius: 10px; overflow: hidden;
+    box-shadow: 0 0 0 6px #f6e9d7, 0 0 0 8px #d9bfa0, 0 18px 50px rgba(120, 80, 40, .35);
+    background: linear-gradient(180deg, #ffe9b8 0%, #ffd08a 40%, #f7a86a 70%, #e98a63 100%);
+  }
+  .window .sun {
+    position: absolute; left: 18%; top: 14%; width: 34%; height: 20%;
+    border-radius: 50%; background: radial-gradient(circle, #fff6d8 0%, rgba(255, 240, 190, .6) 45%, transparent 70%);
+    filter: blur(2px);
+  }
+  .window .bars { position: absolute; inset: 0; }
+  .window .bars::before, .window .bars::after {
+    content: ""; position: absolute; background: rgba(240, 226, 205, .92);
+  }
+  .window .bars::before { left: 50%; top: 0; bottom: 0; width: 8px; transform: translateX(-50%); }
+  .window .bars::after { top: 50%; left: 0; right: 0; height: 8px; transform: translateY(-50%); }
+  .curtain {
+    position: absolute; top: 7%; height: 47%; width: 7%;
+    background: linear-gradient(90deg, #e9b6a0, #f3cbb6 40%, #e6ac93);
+    border-radius: 4px 4px 40% 40%; opacity: .95;
+  }
+  .curtain.left { right: calc(8% + 25.5%); }
+  .curtain.right { right: calc(8% - 1%); }
+
+  /* ---------- 床 ---------- */
+  .bed { position: absolute; left: 4%; bottom: 22%; width: 30%; height: 20%; }
+  .bed .frame {
+    position: absolute; left: 0; right: 0; bottom: 0; height: 42%;
+    background: linear-gradient(180deg, #c99a6d, #a97c52); border-radius: 8px;
+    box-shadow: 0 12px 24px rgba(90, 55, 25, .3);
+  }
+  .bed .mattress {
+    position: absolute; left: 2%; right: 2%; bottom: 34%; height: 34%;
+    background: linear-gradient(180deg, #fdf6ea, #efe0cc); border-radius: 10px;
+  }
+  .bed .blanket {
+    position: absolute; left: 12%; right: 2%; bottom: 33%; height: 30%;
+    background: linear-gradient(180deg, #c7d7c6, #a9bfaa); border-radius: 12px 8px 6px 6px;
+    box-shadow: inset 0 3px 0 rgba(255,255,255,.5);
+  }
+  .bed .pillow {
+    position: absolute; left: 5%; bottom: 52%; width: 34%; height: 26%;
+    background: linear-gradient(180deg, #fffdf7, #eaddc9); border-radius: 18px;
+    box-shadow: 0 4px 10px rgba(120, 90, 60, .2);
+  }
+
+  /* ---------- 书桌 ---------- */
+  .desk { position: absolute; left: 38%; bottom: 26%; width: 34%; height: 12%; }
+  .desk .top {
+    position: absolute; inset: 0 0 68% 0; background: linear-gradient(180deg, #dcae7d, #c28f5c);
+    border-radius: 8px; box-shadow: 0 10px 22px rgba(90, 55, 25, .32), inset 0 2px 0 rgba(255,255,255,.45);
+  }
+  .desk .leg { position: absolute; bottom: 0; width: 7%; height: 70%; background: #b5814f; border-radius: 3px; }
+  .desk .leg.l { left: 6%; } .desk .leg.r { right: 6%; }
+  .desk .laptop {
+    position: absolute; left: 30%; bottom: 66%; width: 40%; height: 52%;
+    background: linear-gradient(180deg, #b9bfc4, #8f979d); border-radius: 6px 6px 3px 3px;
+    box-shadow: 0 6px 16px rgba(0,0,0,.25), inset 0 0 0 2px rgba(255,255,255,.35);
+  }
+  .desk .laptop::after {   /* 屏幕微光 */
+    content: ""; position: absolute; inset: 8% 10%;
+    background: radial-gradient(circle at 50% 45%, rgba(160, 220, 255, .55), rgba(90, 150, 200, .18) 60%, transparent 75%);
+    border-radius: 3px;
+  }
+  .lamp { position: absolute; right: 41%; bottom: 36%; width: 6%; height: 16%; }
+  .lamp .shade {
+    position: absolute; top: 0; left: -40%; width: 180%; height: 45%;
+    background: linear-gradient(180deg, #f6d79a, #e2b46f); border-radius: 50% 50% 8px 8px;
+  }
+  .lamp .stem { position: absolute; top: 44%; left: 47%; width: 6%; height: 56%; background: #b98d5d; }
+  .lamp .glow {
+    position: absolute; top: 20%; left: 50%; width: 520%; height: 520%;
+    transform: translate(-50%, -20%);
+    background: radial-gradient(circle, rgba(255, 219, 150, .34) 0%, rgba(255, 210, 130, .12) 45%, transparent 70%);
+  }
+
+  /* ---------- 地毯 / 绿植 / 画框 ---------- */
+  .rug {
+    position: absolute; left: 22%; bottom: 4%; width: 56%; height: 14%;
+    background: radial-gradient(60% 80% at 50% 40%, #dfc6a8 0%, #cbae8e 70%, #b8997a 100%);
+    border-radius: 50%; opacity: .9;
+    box-shadow: inset 0 0 40px rgba(140, 100, 60, .25);
+  }
+  .plant { position: absolute; right: 5%; bottom: 22%; width: 9%; height: 20%; }
+  .plant .pot {
+    position: absolute; bottom: 0; left: 18%; width: 64%; height: 34%;
+    background: linear-gradient(180deg, #d8a98a, #b9856a); border-radius: 6px 6px 12px 12px;
+  }
+  .plant .leaf {
+    position: absolute; bottom: 30%; left: 50%; width: 34%; height: 62%;
+    background: linear-gradient(180deg, #8fb37a, #5f8055); border-radius: 50% 50% 40% 40%;
+    transform: translateX(-50%) rotate(-12deg); opacity: .95;
+  }
+  .plant .leaf.two { width: 28%; height: 48%; left: 38%; transform: translateX(-50%) rotate(22deg); }
+  .frame {
+    position: absolute; top: 16%; width: 8%; height: 12%;
+    background: #f7efe2; border-radius: 3px;
+    box-shadow: 0 0 0 4px #d6b995, 0 8px 18px rgba(120, 90, 60, .2);
+  }
+  .frame.a { left: 14%; } .frame.b { left: 25%; top: 22%; height: 9%; }
+  .frame .pic { position: absolute; inset: 8%; background: linear-gradient(140deg, #a9c7d8, #e7d7b6 60%, #d8a98a); }
+
+  /* ---------- 她 ---------- */
+  #char {
+    position: absolute; left: 50%; bottom: 12%;
+    transform: translateX(-50%);
+    width: auto; pointer-events: auto;
+    filter: drop-shadow(0 18px 26px rgba(70, 40, 20, .35));
+    transition: left .9s ease, transform .9s ease;
+  }
+  #char canvas { width: 100% !important; height: 100% !important; display: block; }
+  #char.walk { transition-timing-function: linear; }
+  #char-body { position: absolute; inset: 0; }
+
+  /* ---------- 字幕 ---------- */
+  #subtitle {
+    position: absolute; left: 12%; right: 12%; bottom: 4.5%;
+    text-align: center; color: #fff9ef; font-weight: 600; letter-spacing: .04em;
+    font-size: clamp(15px, 2.1vw, 30px); line-height: 1.5;
+    text-shadow: 0 2px 10px rgba(60, 30, 10, .85), 0 0 26px rgba(60, 30, 10, .55);
+    pointer-events: none; min-height: 1.5em; z-index: 20;
+  }
+  #subtitle .dots::after { content: "…"; animation: dots 1.2s steps(4) infinite; }
+
+  /* ---------- 输入条 ---------- */
+  #console {
+    position: fixed; left: 50%; bottom: 14px; transform: translateX(-50%);
+    width: min(680px, 90vw); display: flex; gap: 8px; z-index: 30;
+    padding: 8px; border-radius: 12px;
+    background: rgba(255, 250, 242, .18); backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, .25);
+  }
+  #console.hidden, .desk #console { display: none; }
+  #input {
+    flex: 1; border: 0; outline: 0; background: rgba(255,255,255,.85);
+    border-radius: 8px; padding: 10px 12px; font-size: 15px; color: #3a2a1c;
+  }
+  #console button {
+    border: 0; border-radius: 8px; padding: 0 16px; cursor: pointer;
+    background: #d98f5a; color: #fff; font-size: 15px;
+  }
+  #console button:hover { background: #c97c46; }
+
+/* ---------- 覆盖模式（?overlay=1）：只画她，背景透明，桌面壁纸露出 ---------- */
+body.overlay { background: transparent !important; }
+body.overlay #stage { background: transparent; }
+body.overlay .wall,
+body.overlay .floor,
+body.overlay .baseboard,
+body.overlay .window,
+body.overlay .curtain,
+body.overlay .frame,
+body.overlay .bed,
+body.overlay .desk,
+body.overlay .lamp,
+body.overlay .rug,
+body.overlay .plant { display: none !important; }
+body.overlay #console { display: none !important; }
+body.overlay #char { bottom: 6%; }

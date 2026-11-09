@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>于笙的桌宠</title>
+<style>
+  html, body { margin: 0; height: 100%; background: transparent; overflow: hidden;
+    font-family: "PingFang SC", "Microsoft YaHei", system-ui, sans-serif; }
+  #pet {
+    position: fixed; left: 50%; bottom: 8%;
+    transform: translateX(-50%);
+    will-change: left, transform;
+    cursor: grab;
+    filter: drop-shadow(0 10px 16px rgba(20, 30, 50, .35));
+  }
+  #pet video { display: none; }
+  #pet canvas { display: block; height: 100%; width: auto; background: transparent; }
+  #pet.flip { transform: translateX(-50%) scaleX(-1); }
+  #bubble {
+    position: fixed; left: 50%; bottom: 34%;
+    transform: translateX(-50%);
+    max-width: min(420px, 60vw);
+    padding: 10px 14px;
+    background: rgba(255, 252, 246, .96);
+    color: #2f3a45; font-size: 15px; line-height: 1.5;
+    border-radius: 14px;
+    box-shadow: 0 8px 24px rgba(20, 30, 50, .25);
+    opacity: 0; transition: opacity .18s ease;
+    pointer-events: none; white-space: pre-wrap;
+  }
+  #bubble.on { opacity: 1; }
+  #bubble::after {
+    content: ""; position: absolute; left: 50%; bottom: -7px;
+    width: 14px; height: 14px; background: inherit;
+    transform: translateX(-50%) rotate(45deg); border-radius: 2px;
+  }
+  /* ---------- 右键菜单 ---------- */
+  #menu {
+    position: fixed; z-index: 50; min-width: 150px; padding: 6px;
+    background: rgba(255, 252, 246, .97); border-radius: 10px;
+    box-shadow: 0 10px 30px rgba(20, 30, 50, .28);
+    font-size: 13px; color: #2f3a45;
+    display: none; pointer-events: auto;
+  }
+  #menu.on { display: block; }
+  #menu .item { padding: 7px 10px; border-radius: 7px; cursor: pointer; white-space: nowrap; }
+  #menu .item:hover { background: #f0e6d6; }
+  #menu .sep { height: 1px; margin: 5px 6px; background: rgba(80, 60, 40, .15); }
+  #submenu {
+    position: absolute; left: 100%; top: 0; margin-left: 4px;
+    min-width: 110px; padding: 6px;
+    background: rgba(255, 252, 246, .98); border-radius: 10px;
+    box-shadow: 0 10px 30px rgba(20, 30, 50, .28);
+    display: none;
+  }
+  #submenu.on { display: block; }
+</style>
+</head>
+<body>
+  <div id="pet">
+    <video id="anim" muted loop playsinline autoplay style="display:none"></video>
+    <canvas id="canvas"></canvas>
+  </div>
+  <div id="bubble"></div>
+  <script src="js/pet.js"></script>
+</body>
+</html>

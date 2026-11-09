@@ -1,0 +1,42 @@
+# 凭证与本地配置（绝对不要提交）
+**/config.json
+!qq/config.example.json
+**/volc-tts.json
+**/.env
+.env
+
+# 运行产物
+*.log
+*.err
+voice-sidecar-state.json
+pet-bounds.json
+autostart.log
+host.log
+overlay.log
+
+# Python
+__pycache__/
+*.py[cod]
+.cache/
+.venv/
+venv/
+
+# Node / Electron
+node_modules/
+electron/
+desktop/electron/
+*.asar
+
+# 构建 / 大文件
+*.zip
+*.exe
+*.dll
+*.pdb
+*.nupkg
+tts-out/
+voice-samples/
+
+# 系统
+.DS_Store
+Thumbs.db
+desktop.ini
