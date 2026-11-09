@@ -8,7 +8,7 @@
 const { app, BrowserWindow, screen, ipcMain, globalShortcut, shell, Tray, Menu, nativeImage } = require("electron");
 const path = require("path");
 const fs = require("fs");
-const { execFile } = require("child_process");
+const { execFile, spawn } = require("child_process");
 
 const URL = process.env.YUSHENG_URL || "http://127.0.0.1:8848/pet.html?pet=1";
 const W0 = 360;
@@ -32,6 +32,59 @@ let fullscreenNow = false;
 let prefs = { left: null, top: null, scale: 1, hiddenByUser: false };
 let saveTimer = null;
 let roamTimer = null;
+let menuOpen = false;
+let hitInteractive = null;
+let cursorX = -9999, cursorY = -9999;
+
+// 命中判定：主进程自己算（页面转发 mousemove 在部分机器上收不到，会卡在穿透状态）
+function petScreenRect() {
+  const [x, y] = win.getPosition();
+  const ps = petSize();
+  return {
+    left: x + (W() - ps.w) / 2,
+    top: y + (H() - ps.bottom - ps.h),
+    right: x + (W() + ps.w) / 2,
+    bottom: y + (H() - ps.bottom),
+  };
+}
+
+function applyHitTest() {
+  if (!win) return;
+  const r = petScreenRect();          // DIP 坐标
+  const sf = screen.getPrimaryDisplay().scaleFactor || 1;
+  const cx = cursorX / sf;            // GetCursorPos 是物理像素，换算成 DIP
+  const cy = cursorY / sf;
+  const m = 12 * scale;
+  const inside = cx >= r.left - m && cx <= r.right + m &&
+                 cy >= r.top - m && cy <= r.bottom + m;
+  const want = menuOpen || inside;
+  if (want === hitInteractive) return;
+  hitInteractive = want;
+  try { win.setIgnoreMouseEvents(!want, { forward: true }); } catch (e) {}
+  log("hit=" + (want ? "interactive" : "passthrough"));
+}
+
+function startCursorWatch() {
+  const exe = path.join(__dirname, "cursorwatch.exe");
+  try {
+    const proc = spawn(exe, [], { windowsHide: true, stdio: ["ignore", "pipe", "ignore"] });
+    let buf = "";
+    proc.stdout.on("data", (d) => {
+      buf += d.toString();
+      const lines = buf.split(/\r?\n/);
+      buf = lines.pop() || "";
+      for (const line of lines) {
+        const parts = line.trim().split(/\s+/);
+        if (parts.length < 2) continue;
+        cursorX = Number(parts[0]);
+        cursorY = Number(parts[1]);
+      }
+      applyHitTest();
+    });
+    proc.on("exit", () => { setTimeout(startCursorWatch, 3000); });
+    log("cursorwatch started");
+  } catch (e) { log("cursorwatch error " + e.message); }
+}
 
 function W() { return Math.round(W0 * scale); }
 function H() { return Math.round(H0 * scale); }
@@ -273,9 +326,8 @@ function createWindow() {
     savePrefs();
   });
 
-  ipcMain.on("hover", (_e, over) => {
-    if (win) win.setIgnoreMouseEvents(!over, { forward: true });
-  });
+  // 命中判定改由主进程自己算（页面转发在部分机器上收不到 mousemove）
+  ipcMain.on("hover", () => {});
 
   ipcMain.on("open", (_e, kind) => {
     const url = kind === "voice"
@@ -290,6 +342,12 @@ function createWindow() {
   });
 
   ipcMain.on("hide", () => { hiddenByUser = true; savePrefs(); if (win) win.hide(); });
+
+  ipcMain.on("menu", (_e, open) => {
+    if (!win) return;
+    menuOpen = !!open;
+    applyHitTest();
+  });
 
   ipcMain.on("quit", () => app.quit());
 
@@ -339,6 +397,7 @@ function createTray() {
 
 app.whenReady().then(() => {
   createWindow();
+  startCursorWatch();
   startFullscreenWatch();
   startMoodWatch();
   startRoam();

@@ -9,5 +9,6 @@ contextBridge.exposeInMainWorld("yusheng", {
   onMood: (cb) => ipcRenderer.on("mood", (_e, m) => cb(m)),
   setScale: (pct) => ipcRenderer.send("scale", pct),
   hide: () => ipcRenderer.send("hide"),
+  menu: (open) => ipcRenderer.send("menu", open),
   quit: () => ipcRenderer.send("quit"),
 });

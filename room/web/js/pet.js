@@ -206,16 +206,24 @@ function connect() {
 
 /* ---------- 鼠标：只有她身上才接管 ---------- */
 let hovering = false;
+let lastMouseX = 0, lastMouseY = 0;
 function setHover(v) {
   if (v === hovering) return;
   hovering = v;
   if (bridge && bridge.hover) bridge.hover(v);
 }
+function overUi(e) {
+  // 菜单/子菜单也算交互区，否则鼠标一移出她身体，宿主就会开"点击穿透"，菜单点不动
+  const el = document.elementFromPoint(e.clientX, e.clientY);
+  return !!(el && el.closest && el.closest("#menu, #submenu, #submenuSize"));
+}
+
 window.addEventListener("mousemove", (e) => {
+  lastMouseX = e.clientX; lastMouseY = e.clientY;
   const r = petEl.getBoundingClientRect();
-  const inside = e.clientX >= r.left - 8 && e.clientX <= r.right + 8 &&
-                 e.clientY >= r.top - 8 && e.clientY <= r.bottom + 8;
-  setHover(inside);
+  const overPet = e.clientX >= r.left - 8 && e.clientX <= r.right + 8 &&
+                  e.clientY >= r.top - 8 && e.clientY <= r.bottom + 8;
+  setHover(overPet || overUi(e));
 });
 window.addEventListener("mouseleave", () => setHover(false));
 
@@ -318,10 +326,23 @@ function refreshMenuInfo() {
   }
 }
 
+function syncInteractive() {
+  const anyOpen = menu.classList.contains("on") || submenu.classList.contains("on") || submenuSize.classList.contains("on");
+  if (bridge && bridge.menu) bridge.menu(anyOpen);
+}
+
 function hideMenu() {
   menu.classList.remove("on");
   submenu.classList.remove("on");
   submenuSize.classList.remove("on");
+  syncInteractive();
+  const el = document.elementFromPoint(lastMouseX, lastMouseY);
+  if (el && el.closest && !el.closest("#menu, #submenu, #submenuSize")) {
+    const r = petEl.getBoundingClientRect();
+    const overPet = lastMouseX >= r.left - 8 && lastMouseX <= r.right + 8 &&
+                    lastMouseY >= r.top - 8 && lastMouseY <= r.bottom + 8;
+    setHover(overPet);
+  }
 }
 
 function placePanel(panel) {
@@ -334,8 +355,10 @@ function placePanel(panel) {
 
 window.addEventListener("contextmenu", (e) => {
   e.preventDefault();
+  setHover(true);          // 菜单要能点，先接管鼠标
   refreshMenuInfo();
   menu.classList.add("on");
+  syncInteractive();       // 必须在 "on" 之后调用，否则算出来是"没打开"
   const mw = menu.offsetWidth || 180;
   const mh = menu.offsetHeight || 250;
   const pr = petEl.getBoundingClientRect();
@@ -374,8 +397,8 @@ menu.addEventListener("click", (e) => {
   const hit = e.target.closest("[data-act]");
   const act = hit ? hit.dataset.act : null;
   if (!act) return;
-  if (act === "anim") { hideMenu(); submenuSize.classList.remove("on"); submenu.classList.add("on"); return; }
-  if (act === "size") { hideMenu(); submenu.classList.remove("on"); submenuSize.classList.add("on"); return; }
+  if (act === "anim") { hideMenu(); submenuSize.classList.remove("on"); submenu.classList.add("on"); syncInteractive(); return; }
+  if (act === "size") { hideMenu(); submenu.classList.remove("on"); submenuSize.classList.add("on"); syncInteractive(); return; }
   if (act === "say") { say(LINES[Math.floor(Math.random() * LINES.length)]); hideMenu(); }
   if (act === "voice") { bridge && bridge.voice && bridge.voice(); hideMenu(); }
   if (act === "room") { bridge && bridge.room && bridge.room(); hideMenu(); }
