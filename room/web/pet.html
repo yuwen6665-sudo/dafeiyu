@@ -37,16 +37,37 @@
   }
   /* ---------- 右键菜单 ---------- */
   #menu {
-    position: fixed; z-index: 50; min-width: 150px; padding: 6px;
-    background: rgba(255, 252, 246, .97); border-radius: 10px;
-    box-shadow: 0 10px 30px rgba(20, 30, 50, .28);
-    font-size: 13px; color: #2f3a45;
+    position: fixed; z-index: 50;
+    min-width: 168px; max-width: calc(100vw - 12px);
+    padding: 8px;
+    background: linear-gradient(180deg, #fffdf8, #fdf5e9);
+    border: 1px solid rgba(196, 168, 130, .35);
+    border-radius: 16px;
+    box-shadow: 0 14px 40px rgba(60, 40, 20, .22), 0 2px 6px rgba(60, 40, 20, .08);
+    font-size: 13px; color: #3a3228;
     display: none; pointer-events: auto;
   }
-  #menu.on { display: block; }
-  #menu .item { padding: 7px 10px; border-radius: 7px; cursor: pointer; white-space: nowrap; }
-  #menu .item:hover { background: #f0e6d6; }
-  #menu .sep { height: 1px; margin: 5px 6px; background: rgba(80, 60, 40, .15); }
+  #menu.on { display: block; animation: menuIn .12s ease-out; }
+  @keyframes menuIn {
+    from { opacity: 0; transform: scale(.96); }
+    to   { opacity: 1; transform: scale(1); }
+  }
+  #menu .item {
+    display: flex; align-items: center; gap: 8px;
+    padding: 5px 9px; border-radius: 10px; cursor: pointer; white-space: nowrap;
+    transition: background .12s ease, color .12s ease;
+  }
+  #menu .item .ico { width: 16px; text-align: center; font-size: 13px; opacity: .85; }
+  #menu .item .tx { flex: 1; }
+  #menu .item .val { display: flex; align-items: center; gap: 4px; color: #9a8062; font-size: 12px; }
+  #menu .item .arrow { color: #b8a184; font-size: 11px; }
+  #menu .item:hover { background: #f6e8d2; }
+  #menu .item.info { cursor: default; color: #8a7358; font-size: 12px; }
+  #menu .item.info:hover { background: transparent; }
+  #menu .item.danger { color: #b4544a; }
+  #menu .item.danger .ico { opacity: .9; }
+  #menu .item.danger:hover { background: #fbe9e6; }
+  #menu .sep { height: 1px; margin: 3px 8px; background: rgba(160, 130, 95, .18); }
   #submenu {
     position: fixed; left: 50%; top: 50%; transform: translate(-50%, -50%);
     z-index: 60;

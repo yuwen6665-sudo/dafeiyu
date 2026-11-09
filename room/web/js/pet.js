@@ -283,16 +283,17 @@ petEl.addEventListener("click", () => {
 const menu = document.createElement("div");
 menu.id = "menu";
 menu.innerHTML = `
-  <div class="item" data-act="anim">换个动作 ▸</div>
-  <div class="item" data-act="size">大小 ▸ <span id="sizeCur">100%</span></div>
-  <div class="item" data-act="say">说句话</div>
-  <div class="item" data-act="voice">语音对话</div>
-  <div class="item" data-act="room">打开房间</div>
-  <div class="item" data-act="hide">隐藏</div>
+  <div class="item" data-act="anim"><span class="ico">✨</span><span class="tx">换个动作</span><span class="arrow">▸</span></div>
+  <div class="item" data-act="size"><span class="ico">📐</span><span class="tx">大小</span><span class="val"><span id="sizeCur">100%</span><span class="arrow">▸</span></span></div>
   <div class="sep"></div>
-  <div class="item info" id="moodInfo">心情：读取中…</div>
+  <div class="item" data-act="say"><span class="ico">💬</span><span class="tx">说句话</span></div>
+  <div class="item" data-act="voice"><span class="ico">🎤</span><span class="tx">语音对话</span></div>
+  <div class="item" data-act="room"><span class="ico">🏠</span><span class="tx">打开房间</span></div>
+  <div class="item" data-act="hide"><span class="ico">🙈</span><span class="tx">隐藏</span></div>
   <div class="sep"></div>
-  <div class="item" data-act="quit">退出</div>
+  <div class="item info" id="moodInfo"><span class="ico">♡</span><span class="tx">心情：读取中…</span></div>
+  <div class="sep"></div>
+  <div class="item danger" data-act="quit"><span class="ico">✖</span><span class="tx">退出</span></div>
   <div id="submenu"></div>
   <div id="submenuSize"></div>
 `;
@@ -353,7 +354,8 @@ function refreshMenuInfo() {
   }
   const info = document.getElementById("moodInfo");
   if (info) {
-    info.textContent = moodState
+    const tx = info.querySelector(".tx") || info;
+    tx.textContent = moodState
       ? "心情：" + moodState.mood + " · " + moodState.label
       : "心情：读取中…";
   }
