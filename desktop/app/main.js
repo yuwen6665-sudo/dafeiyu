@@ -5,7 +5,7 @@
 //   · 永远浮在最前面
 //   · 位置记忆、全屏自动隐藏（所有全屏）、手动隐藏、缩放三档（80/100/125）
 //   · 心情读 feiyu-mood 的 state.json（只读）
-const { app, BrowserWindow, screen, ipcMain, globalShortcut, shell } = require("electron");
+const { app, BrowserWindow, screen, ipcMain, globalShortcut, shell, Tray, Menu, nativeImage } = require("electron");
 const path = require("path");
 const fs = require("fs");
 const { execFile } = require("child_process");
@@ -289,6 +289,8 @@ function createWindow() {
     if (SCALES.includes(s)) applyScale(s);
   });
 
+  ipcMain.on("hide", () => { hiddenByUser = true; savePrefs(); if (win) win.hide(); });
+
   ipcMain.on("quit", () => app.quit());
 
   win.on("minimize", () => {
@@ -305,7 +307,34 @@ function createWindow() {
   globalShortcut.register("CommandOrControl+Alt+2", () => applyScale(1));
   globalShortcut.register("CommandOrControl+Alt+3", () => applyScale(1.25));
 
+  createTray();
+
   app.on("window-all-closed", () => app.quit());
+}
+
+// ---------- 托盘 ----------
+let tray = null;
+
+function createTray() {
+  try {
+    const p = path.join(__dirname, "pet-icon.png");
+    const img = nativeImage.createFromPath(p).resize({ width: 32, height: 32 });
+    tray = new Tray(img.isEmpty() ? nativeImage.createEmpty() : img);
+    tray.setToolTip("于笙");
+    const showWin = () => { hiddenByUser = false; savePrefs(); if (win) { win.show(); win.setAlwaysOnTop(true, "screen-saver"); } };
+    const hideWin = () => { hiddenByUser = true; savePrefs(); if (win) win.hide(); };
+    tray.on("click", () => { if (win && win.isVisible()) hideWin(); else showWin(); });
+    tray.setContextMenu(Menu.buildFromTemplate([
+      { label: "显示于笙", click: showWin },
+      { label: "隐藏", click: hideWin },
+      { type: "separator" },
+      { label: "置顶开关", click: () => { if (win) win.setAlwaysOnTop(!win.isAlwaysOnTop()); } },
+      { label: "打开房间", click: () => shell.openExternal("http://127.0.0.1:8848/room.html").catch(() => {}) },
+      { type: "separator" },
+      { label: "退出", click: () => { try { tray.destroy(); } catch (e) {} app.quit(); } },
+    ]));
+    log("tray ready");
+  } catch (e) { log("tray error: " + e.message); }
 }
 
 app.whenReady().then(() => {

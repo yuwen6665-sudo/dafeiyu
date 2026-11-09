@@ -262,6 +262,7 @@ menu.innerHTML = `
   <div class="item" data-act="say">说句话</div>
   <div class="item" data-act="voice">语音对话</div>
   <div class="item" data-act="room">打开房间</div>
+  <div class="item" data-act="hide">隐藏</div>
   <div class="sep"></div>
   <div class="item info" id="moodInfo">心情：读取中…</div>
   <div class="sep"></div>
@@ -333,11 +334,17 @@ window.addEventListener("contextmenu", (e) => {
   refreshMenuInfo();
   menu.classList.add("on");
   const mw = menu.offsetWidth || 180;
-  const mh = menu.offsetHeight || 240;
-  let left = e.clientX;
-  let top = e.clientY;
-  if (left + mw > window.innerWidth - 4) left = Math.max(4, window.innerWidth - mw - 4);
-  if (top + mh > window.innerHeight - 4) top = Math.max(4, window.innerHeight - mh - 4);
+  const mh = menu.offsetHeight || 250;
+  const pr = petEl.getBoundingClientRect();
+  const petCx = pr.left + pr.width / 2;
+  const petCy = pr.top + pr.height / 2;
+  // 优先弹在她身体的一侧，尽量不挡住她
+  let left = petCx < window.innerWidth / 2
+    ? pr.right - 24
+    : pr.left - mw + 24;
+  left = Math.max(4, Math.min(window.innerWidth - mw - 4, left));
+  let top = petCy - mh / 2;
+  top = Math.max(4, Math.min(window.innerHeight - mh - 4, top));
   menu.style.left = left + "px";
   menu.style.top = top + "px";
 });
@@ -362,6 +369,7 @@ menu.addEventListener("click", (e) => {
   if (act === "say") { say(LINES[Math.floor(Math.random() * LINES.length)]); hideMenu(); }
   if (act === "voice") { bridge && bridge.voice && bridge.voice(); hideMenu(); }
   if (act === "room") { bridge && bridge.room && bridge.room(); hideMenu(); }
+  if (act === "hide") { hideMenu(); if (bridge && bridge.hide) bridge.hide(); }
   if (act === "quit") { bridge && bridge.quit && bridge.quit(); }
 });
 async function idleChat() {
