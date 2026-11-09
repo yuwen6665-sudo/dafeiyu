@@ -35,6 +35,7 @@ let roamTimer = null;
 let menuOpen = false;
 let hitInteractive = null;
 let cursorX = -9999, cursorY = -9999;
+let lastBtn = 0;
 
 // 命中判定：主进程自己算（页面转发 mousemove 在部分机器上收不到，会卡在穿透状态）
 function petScreenRect() {
@@ -78,6 +79,16 @@ function startCursorWatch() {
         if (parts.length < 2) continue;
         cursorX = Number(parts[0]);
         cursorY = Number(parts[1]);
+        const btn = Number(parts[2] || 0);
+        if (menuOpen && btn === 1 && lastBtn === 0) {
+          // 菜单开着时点了左键：如果落点不在窗口内，就关掉界面
+          const sf2 = screen.getPrimaryDisplay().scaleFactor || 1;
+          const b = win.getBounds();
+          const cx2 = cursorX / sf2, cy2 = cursorY / sf2;
+          const inWin = cx2 >= b.x && cx2 <= b.x + b.width && cy2 >= b.y && cy2 <= b.y + b.height;
+          if (!inWin) { try { win.webContents.send("close-ui"); } catch (e) {} }
+        }
+        lastBtn = btn;
       }
       applyHitTest();
     });

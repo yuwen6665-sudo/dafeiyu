@@ -28,6 +28,12 @@ const ANIM_NAMES = {
   yawn: "打哈欠", sleep: "睡觉", stretch: "伸懒腰", sing: "哼歌", mirror: "照镜子", bubble: "吐泡泡",
 };
 
+const ANIM_ICON = {
+  idle: "😌", idle2: "👀", walk: "🚶", run: "🏃", float: "🕺",
+  wave: "👋", happy: "😊", dance: "💃", cat: "🐱", snack: "🍪",
+  yawn: "🥱", sleep: "💤", stretch: "🙆", sing: "🎵", mirror: "🪞", bubble: "🫧",
+};
+
 const ACTIONS = ["cat", "snack", "yawn", "stretch", "sing", "mirror", "bubble", "happy", "dance"];
 const LINES = [
   "爸爸在忙吗……",
@@ -56,7 +62,19 @@ let audio = null;
 
 function sendMove() { if (bridge && bridge.move) bridge.move({ cx, cy }); }
 
+let currentAnim = "idle";
+
+function refreshActionCur() {
+  const box = document.getElementById("submenu");
+  if (!box) return;
+  for (const el of box.querySelectorAll("[data-anim]")) {
+    el.classList.toggle("cur", el.dataset.anim === currentAnim);
+  }
+}
+
 function setAnim(name) {
+  currentAnim = ANIM[name] ? name : "idle";
+  refreshActionCur();
   const file = ANIM[name] || ANIM.idle;
   const src = "pets/" + encodeURIComponent(file);
   if (!video.src.endsWith(encodeURIComponent(file))) video.src = src;
@@ -286,13 +304,28 @@ document.body.appendChild(submenu);
 document.body.appendChild(submenuSize);
 const SIZES = [80, 100, 125];
 
+const subHeader = document.createElement("div");
+subHeader.className = "sub-head";
+subHeader.innerHTML = '<span class="ttl">动作</span><span class="sub-x" title="关闭">✕</span>';
+subHeader.querySelector(".sub-x").onclick = () => { submenu.classList.remove("on"); syncInteractive(); };
+submenu.appendChild(subHeader);
+
 for (const key of Object.keys(ANIM)) {
   const el = document.createElement("div");
-  el.className = "item sub";
-  el.textContent = ANIM_NAMES[key] || key;
+  el.className = "cell";
+  el.dataset.anim = key;
+  const ico = document.createElement("span");
+  ico.className = "ico";
+  ico.textContent = ANIM_ICON[key] || "✨";
+  const nm = document.createElement("span");
+  nm.className = "nm";
+  nm.textContent = ANIM_NAMES[key] || key;
+  el.appendChild(ico);
+  el.appendChild(nm);
   el.onclick = () => { setAnim(key); hideMenu(); submenu.classList.remove("on"); setTimeout(() => { if (!busy) setAnim(moodAnim()); }, 2600); };
   submenu.appendChild(el);
 }
+refreshActionCur();
 for (const s of SIZES) {
   const el = document.createElement("div");
   el.className = "item";
@@ -477,6 +510,23 @@ setInterval(() => {
 function bindMood() {
   if (bridge && bridge.onMood) bridge.onMood((m) => applyMood(m));
 }
+
+/* ---------- 关闭所有浮层（点桌面空白 / Esc） ---------- */
+function closeAllUi() {
+  hideMenu();
+  submenu.classList.remove("on");
+  submenuSize.classList.remove("on");
+  syncInteractive();
+}
+
+window.addEventListener("keydown", (e) => {
+  if (e.key === "Escape") closeAllUi();
+});
+
+function bindCloseUi() {
+  if (bridge && bridge.onCloseUi) bridge.onCloseUi(() => closeAllUi());
+}
+
 /* ---------- 启动 ---------- */
 cx = (window.screenX || 0) + window.innerWidth / 2;
 cy = (window.screenY || 0) + window.innerHeight / 2;
@@ -492,3 +542,4 @@ connect();
 idleChat();
 bindAnim();
 bindMood();
+bindCloseUi();

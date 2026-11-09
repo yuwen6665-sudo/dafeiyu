@@ -10,5 +10,6 @@ contextBridge.exposeInMainWorld("yusheng", {
   setScale: (pct) => ipcRenderer.send("scale", pct),
   hide: () => ipcRenderer.send("hide"),
   menu: (open) => ipcRenderer.send("menu", open),
+  onCloseUi: (cb) => ipcRenderer.on("close-ui", () => cb()),
   quit: () => ipcRenderer.send("quit"),
 });
