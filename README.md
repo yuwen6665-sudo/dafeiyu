@@ -3,6 +3,8 @@
 > 一个有自己房间、会走路、会用**你复刻的声音**说话、会主动找你的 AI 伴侣。
 > 跑在 Windows 上，接 DeepSeek Harness 当大脑，QQ / 桌面 / 房间三处都是同一个她。
 
+**工作方式**：每次需求先出「需求翻译卡」（术语 + 边界 + 验收），确认后再动手。详见 [RULES.md](RULES.md)。
+
 <p align="center">
   <img src="screenshots/room.jpg" width="48%" alt="她的房间">
   <img src="screenshots/pet.jpg" width="48%" alt="桌面上的她">
