@@ -256,6 +256,8 @@ function createWindow() {
     try {
       win.webContents.setZoomFactor(1);
       if (!hiddenByUser) win.show();
+      const m0 = readMood();
+      if (m0) { try { win.webContents.send("mood", m0); } catch (e) {} }
       log("ready " + w + "x" + h + " at " + x + "," + y);
     } catch (e) {}
   });
@@ -280,6 +282,11 @@ function createWindow() {
       ? "http://127.0.0.1:8848/room.html?desk=1"
       : "http://127.0.0.1:8848/room.html";
     shell.openExternal(url).catch(() => {});
+  });
+
+  ipcMain.on("scale", (_e, pct) => {
+    const s = Number(pct) / 100;
+    if (SCALES.includes(s)) applyScale(s);
   });
 
   ipcMain.on("quit", () => app.quit());

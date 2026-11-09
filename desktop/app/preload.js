@@ -7,5 +7,6 @@ contextBridge.exposeInMainWorld("yusheng", {
   room: () => ipcRenderer.send("open", "room"),
   onAnim: (cb) => ipcRenderer.on("anim", (_e, n) => cb(n)),
   onMood: (cb) => ipcRenderer.on("mood", (_e, m) => cb(m)),
+  setScale: (pct) => ipcRenderer.send("scale", pct),
   quit: () => ipcRenderer.send("quit"),
 });

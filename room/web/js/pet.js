@@ -258,58 +258,112 @@ const menu = document.createElement("div");
 menu.id = "menu";
 menu.innerHTML = `
   <div class="item" data-act="anim">换个动作 ▸</div>
+  <div class="item" data-act="size">大小 ▸ <span id="sizeCur">100%</span></div>
   <div class="item" data-act="say">说句话</div>
   <div class="item" data-act="voice">语音对话</div>
   <div class="item" data-act="room">打开房间</div>
   <div class="sep"></div>
+  <div class="item info" id="moodInfo">心情：读取中…</div>
+  <div class="sep"></div>
   <div class="item" data-act="quit">退出</div>
   <div id="submenu"></div>
+  <div id="submenuSize"></div>
 `;
 document.body.appendChild(menu);
 const submenu = menu.querySelector("#submenu");
+const submenuSize = menu.querySelector("#submenuSize");
+const SIZES = [80, 100, 125];
+
 for (const key of Object.keys(ANIM)) {
   const el = document.createElement("div");
   el.className = "item sub";
   el.textContent = ANIM_NAMES[key] || key;
-  el.onclick = () => { setAnim(key); hideMenu(); setTimeout(() => { if (!busy) setAnim("idle"); }, 2600); };
+  el.onclick = () => { setAnim(key); hideMenu(); setTimeout(() => { if (!busy) setAnim(moodAnim()); }, 2600); };
   submenu.appendChild(el);
 }
+for (const s of SIZES) {
+  const el = document.createElement("div");
+  el.className = "item";
+  el.dataset.size = String(s);
+  el.textContent = s + "%";
+  el.onclick = () => {
+    if (bridge && bridge.setScale) bridge.setScale(s);
+    hideMenu();
+  };
+  submenuSize.appendChild(el);
+}
 
-function hideMenu() { menu.classList.remove("on"); submenu.classList.remove("on"); }
+function currentScalePct() {
+  return Math.round((window.innerWidth / 360) * 100);
+}
+
+function refreshMenuInfo() {
+  const pct = currentScalePct();
+  const cur = document.getElementById("sizeCur");
+  if (cur) cur.textContent = pct + "%";
+  for (const el of submenuSize.children) {
+    const v = Number(el.dataset.size);
+    const isCur = Math.abs(pct - v) <= 4;
+    el.classList.toggle("checked", isCur);
+  }
+  const info = document.getElementById("moodInfo");
+  if (info) {
+    info.textContent = moodState
+      ? "心情：" + moodState.mood + " · " + moodState.label
+      : "心情：读取中…";
+  }
+}
+
+function hideMenu() {
+  menu.classList.remove("on");
+  submenu.classList.remove("on");
+  submenuSize.classList.remove("on");
+}
+
+function placePanel(panel) {
+  const mr = menu.getBoundingClientRect();
+  const sw = panel.offsetWidth || 110;
+  const sh = panel.offsetHeight || 160;
+  panel.classList.toggle("left", mr.right + sw > window.innerWidth - 4);
+  panel.style.top = Math.max(-mr.top + 4, Math.min(0, window.innerHeight - mr.top - sh - 4)) + "px";
+}
 
 window.addEventListener("contextmenu", (e) => {
   e.preventDefault();
+  refreshMenuInfo();
   menu.classList.add("on");
-  // 先显示再量尺寸，贴边时自动翻到上方/左侧，避免被屏幕裁掉
-  const mw = menu.offsetWidth || 160;
-  const mh = menu.offsetHeight || 200;
+  const mw = menu.offsetWidth || 180;
+  const mh = menu.offsetHeight || 240;
   let left = e.clientX;
   let top = e.clientY;
   if (left + mw > window.innerWidth - 4) left = Math.max(4, window.innerWidth - mw - 4);
-  if (top + mh > window.innerHeight - 4) top = Math.max(4, e.clientY - mh - 8);
+  if (top + mh > window.innerHeight - 4) top = Math.max(4, window.innerHeight - mh - 4);
   menu.style.left = left + "px";
   menu.style.top = top + "px";
 });
+
 window.addEventListener("mousedown", (e) => {
-  if (!menu.contains(e.target)) { hideMenu(); submenu.classList.remove("on"); }
+  if (!menu.contains(e.target)) hideMenu();
 });
+
 menu.addEventListener("click", (e) => {
-  const act = e.target.dataset.act;
-  if (!act) return;
-  if (act === "anim") {
-    submenu.classList.toggle("on");
-    // 右边放不下就翻到左边
-    const mr = menu.getBoundingClientRect();
-    const sw = submenu.offsetWidth || 110;
-    submenu.classList.toggle("left", mr.right + sw > window.innerWidth - 4);
+  const sizeBtn = e.target.closest("[data-size]");
+  if (sizeBtn) {
+    const s = Number(sizeBtn.dataset.size);
+    if (bridge && bridge.setScale) bridge.setScale(s);
+    hideMenu();
     return;
   }
+  const hit = e.target.closest("[data-act]");
+  const act = hit ? hit.dataset.act : null;
+  if (!act) return;
+  if (act === "anim") { submenu.classList.toggle("on"); submenuSize.classList.remove("on"); placePanel(submenu); return; }
+  if (act === "size") { submenuSize.classList.toggle("on"); submenu.classList.remove("on"); placePanel(submenuSize); return; }
   if (act === "say") { say(LINES[Math.floor(Math.random() * LINES.length)]); hideMenu(); }
   if (act === "voice") { bridge && bridge.voice && bridge.voice(); hideMenu(); }
   if (act === "room") { bridge && bridge.room && bridge.room(); hideMenu(); }
   if (act === "quit") { bridge && bridge.quit && bridge.quit(); }
 });
-
 async function idleChat() {
   for (;;) {
     await sleep((8 + Math.random() * 7) * 60 * 1000);
@@ -357,16 +411,27 @@ function moodLines() {
 
 function applyMood(m) {
   moodState = m;
-  if (busy || dragging) return;
-  setAnim(moodAnim());
-  // 心情变化明显时，偶尔主动说一句（10 分钟最多一次）
-  const now = Date.now();
-  if (now - lastMoodSay > 10 * 60 * 1000 && Math.random() < 0.5) {
-    lastMoodSay = now;
-    const lines = moodLines();
-    say(lines[Math.floor(Math.random() * lines.length)]);
-  }
+  if (!busy && !dragging) setAnim(moodAnim());
+  // 心情台词：每天最多一句
+  try {
+    const today = new Date().toDateString();
+    if (localStorage.getItem("moodSayDate") !== today) {
+      localStorage.setItem("moodSayDate", today);
+      setTimeout(() => { if (!busy && !dragging && talking === 0) say(moodLines()[0]); }, 4000);
+    }
+  } catch (e) {}
 }
+
+// 中性心情也要看得见：每 45 秒在两个待机之间来回换（必定变化，不靠随机）
+let idleFlip = 0;
+setInterval(() => {
+  if (busy || dragging || talking > 0) return;
+  const m = moodState ? moodState.mood : 70;
+  if (m < 45) { setAnim("yawn"); return; }
+  if (m >= 80) { setAnim(Math.random() < 0.5 ? "happy" : "dance"); return; }
+  idleFlip = 1 - idleFlip;
+  setAnim(idleFlip ? "idle2" : "idle");
+}, 45000);
 
 function bindMood() {
   if (bridge && bridge.onMood) bridge.onMood((m) => applyMood(m));

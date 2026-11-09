@@ -39,6 +39,8 @@ CSS 坐标 + dpr；watcher 用 `GetCursorPos` 对比，鼠标落在她身上就�
 
 位置、缩放、隐藏状态保存在 `pet-prefs.json`，重启自动恢复。
 
+右键菜单里也能改大小（「大小 ▸ 80% / 100% / 125%」），并显示当前心情（来自 feiyu-mood）。
+
 ## 构建
 
 ```powershell
