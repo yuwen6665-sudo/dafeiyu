@@ -112,3 +112,32 @@ pets/*.webm          ← Q 版大肥鱼动画（MIT，见 pets/LICENSE-大肥鱼
 - **透明窗口里 `<video>` 会失去 alpha**：本仓库的 `pet.js` 已经把视频逐帧画到 canvas 绕过
 - **Chromium 窗口挂进 WorkerW（真壁纸层）后视口会坏**：实测窗口 2560×1600 但页面只有 580×127，
   所以最终没用壁纸层方案，改用"透明窗口 + 鼠标命中区穿透"
+
+## 6. 预算台账 + 熔断（可选但推荐）
+
+把 `room/server-budget.py` 复制为 `yuyaya/server/budget.py`，然后：
+
+- `server/tts.py` 顶部加 `from . import budget`，缓存未命中写入后调用 `budget.add_tts(len(text))`
+- `server/brains/openai_compat.py` 顶部加 `from .. import budget`，构造 body 后：
+  ```python
+  if budget.degraded():
+      body["max_tokens"] = min(int(body.get("max_tokens") or 120), 120)
+  ```
+- `server/app.py`：
+  ```python
+  from . import budget
+  from .asr import recognize as asr_recognize
+  ```
+  `/api/tts` 开头加：
+  ```python
+  if budget.degraded():
+      raise HTTPException(402, "budget: 本月额度已到上限，语音已关闭")
+  ```
+  `Avatar.chat` 开头加熔断分支、结尾加 `budget.add_llm(...)`、并挂上 `/api/budget` 与 `/api/asr`（见 `room/server-app.py`）
+
+台账文件 `.cache/budget.json`：50 元降级、60 元熔断、跨月自动归零。
+
+## 7. 按住说话（ASR）
+
+把 `room/server-asr.py` 复制为 `yuyaya/server/asr.py`，前端用 `room/web/js/room.js` 的 `bindMic()`。
+语音识别需要在火山控制台开通「语音识别 · 大模型/极速版」，否则返回 45000030。

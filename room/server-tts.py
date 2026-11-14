@@ -15,6 +15,8 @@ import pathlib
 
 import requests
 
+from . import budget
+
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 CACHE = ROOT / ".cache" / "tts"
 CACHE.mkdir(parents=True, exist_ok=True)
@@ -103,5 +105,9 @@ def synth(text: str, emotion: str = "", emotion_scale: int = 0,
         raise RuntimeError(f"火山 TTS 返回音频过短（{len(audio)} 字节）")
 
     cached.write_bytes(audio)
+    try:
+        budget.add_tts(len(text))
+    except Exception:
+        pass
     log.info("tts ok: %d bytes, %d chars", len(audio), len(text))
     return audio
